@@ -1,27 +1,19 @@
-﻿using FastEndpoints;
-using FastEndpoints.Security;
-using Web.Auth;
+﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Customers.Login
+namespace Customers.Login;
+
+[HttpGet("/customer/login")]
+[AllowAnonymous]
+public class Endpoint : EndpointWithoutRequest
 {
-    public class Endpoint : Endpoint<Request>
+    public override Task HandleAsync(CancellationToken t)
     {
-        public Endpoint()
-        {
-            Verbs(Http.GET);
-            Routes("/customers/login");
-            AllowAnnonymous();
-        }
+        var token = JWTBearer.CreateToken(
+            signingKey: Config!["TokenKey"],
+            permissions: new[] { Allow.Customers_Create, Allow.Customers_Update, Allow.Customers_Retrieve },
+            roles: new[] { Role.Customer },
+            claims: new[] { (Claim.CustomerID, "CST001") });
 
-        protected override Task HandleAsync(Request r, CancellationToken t)
-        {
-            var token = JWTBearer.CreateToken(
-                signingKey: Config["TokenKey"],
-                permissions: new[] { Allow.Customers_Create, Allow.Customers_Update, Allow.Customers_Retrieve },
-                roles: new[] { Role.Customer },
-                claims: new[] { (Claim.CustomerID, "CST001") });
-
-            return SendAsync(token);
-        }
+        return SendAsync(token);
     }
 }

@@ -1,0 +1,9 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <NoWarn>CS1587,CS1591,CS1998,NU5105,RCS1102,IDE1006</NoWarn>
+    </PropertyGroup>
+</Project>

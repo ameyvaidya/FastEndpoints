@@ -1,33 +1,45 @@
-﻿using FastEndpoints;
-using Web.Auth;
+﻿namespace Customers.List.Recent;
 
-namespace Customers.List.Recent
+public class Endpoint : EndpointWithoutRequest
 {
-    public class Endpoint : BasicEndpoint
+    public override void Configure()
     {
-        public Endpoint()
-        {
-            Verbs(Http.GET);
-            Routes("/customers/list/recent");
-            Policies("AdminOnly");
-            Roles(
-                Role.Admin,
-                Role.Staff);
-            Permissions(
-                Allow.Customers_Retrieve,
-                Allow.Customers_Create);
-        }
+        Verbs(Http.GET);
+        Routes("/customer/list/recent");
+        Policies("AdminOnly");
+        Roles(
+            Role.Admin,
+            Role.Staff);
+        Permissions(
+            Allow.Customers_Retrieve,
+            Allow.Customers_Create);
+        Options(o => o.Produces<Response>(200));
+    }
 
-        protected override Task HandleAsync(EmptyRequest er, CancellationToken ct)
+    public override Task<object> ExecuteAsync(CancellationToken ct)
+    {
+        return Task.FromResult((object)new Response
         {
-            return SendAsync(new Response
-            {
-                Customers = new[] {
+            Customers = new[] {
                     new KeyValuePair<string,int>("ryan gunner", 123),
                     new KeyValuePair<string,int>("debby ryan", 124),
                     new KeyValuePair<string,int>("ryan reynolds",321)
                 }
-            });
-        }
+        });
+    }
+}
+
+public class Response
+{
+    public IEnumerable<KeyValuePair<string, int>>? Customers { get; set; }
+}
+
+public class Endpoint_V1 : Endpoint
+{
+    public override void Configure()
+    {
+        base.Configure();
+        Version(1, deprecateAt: 2);
+        AuthSchemes("ApiKey", "Cookies");
     }
 }

@@ -3,22 +3,23 @@ using Microsoft.AspNetCore.Mvc;
 using MinimalApi;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
 builder.Services
     .AddAuthorization()
     .AddSingleton<IValidator<Request>, Validator>();
 
 var app = builder.Build();
 app.UseAuthorization();
-app.MapPost("/benchmark/ok/{id}",
-    (
-        [FromRoute] int id,
-        [FromBody] Request req,
-        [FromServices] ILogger<Program> _,
-        [FromServices] IValidator<Request> validator) =>
-    {
-        //logger.LogInformation("request received!");
 
-        validator.Validate(req);
+app.MapPost("/benchmark/ok/{id}", async (
+    [FromRoute] int id,
+    [FromBody] Request req,
+    [FromServices] ILogger<Program> logger,
+    [FromServices] IValidator<Request> validator) =>
+    {
+        // logger.LogInformation("request received!");
+
+        await validator.ValidateAsync(req);
 
         return Results.Ok(new Response()
         {

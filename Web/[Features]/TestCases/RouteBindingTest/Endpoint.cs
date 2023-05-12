@@ -1,38 +1,46 @@
-﻿using FastEndpoints;
-using FastEndpoints.Validation;
+﻿namespace TestCases.RouteBindingTest;
 
-namespace TestCases.RouteBindingTest
+public class Endpoint : Endpoint<Request, Response>
 {
-    public class Validator : Validator<Request>
+    public ILogger<Endpoint> logger; //this should be ignored by property injection because it doesn't have getter/setter
+
+    public override void Configure()
     {
-        public Validator()
+        Verbs(Http.POST);
+        Routes("/test-cases/route-binding-test/{string}/{bool}/{int}/{long}/{double}/{decimal}");
+        AllowAnonymous();
+        DontThrowIfValidationFails();
+        Options(x => x
+            .WithName("RouteBindingTest")
+            .Accepts<Request>("application/json", "test1/test1", "test2/test2"));
+        Summary(s =>
         {
-            RuleFor(x => x.FromBody).Must(x => x != "xxx");
-        }
+            s.Description = "descr";
+            s.Summary = "summary";
+            s.RequestParam(r => r.FromBody, "overriden from body comment");
+        });
     }
 
-    public class Endpoint : Endpoint<Request>
+    public override Task HandleAsync(Request r, CancellationToken t)
     {
-        public Endpoint()
-        {
-            Verbs(Http.POST);
-            Routes("/test-cases/route-binding-test/{string}/{bool}/{int}/{long}/{double}/{decimal}");
-            AllowAnnonymous();
-            DontThrowIfValidationFails(); //FromBody value will cause validation failure but will not auto throw
-        }
+        Logger.LogWarning("ok");
 
-        protected override Task HandleAsync(Request r, CancellationToken t)
+        if (logger != null) ThrowError("property injection failed us!");
+
+        return SendAsync(new Response
         {
-            return SendAsync(new Response
-            {
-                Bool = r.Bool,
-                Decimal = r.Decimal,
-                Double = r.Double,
-                FromBody = r.FromBody,
-                Int = r.Int,
-                Long = r.Long,
-                String = r.String,
-            });
-        }
+            Bool = r.Bool,
+            Decimal = r.DecimalNumber,
+            Double = r.Double,
+            FromBody = r.FromBody,
+            Int = r.Int!.Value,
+            Long = r.Long,
+            String = r.String,
+            Blank = r.Blank,
+            Url = r.Url?.ToString(),
+            Custom = r.Custom,
+            CustomList = r.CustomList,
+            Person = r.Person
+        });
     }
 }
